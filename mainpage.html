@@ -209,23 +209,26 @@
 
         // Function to add details to prescription preview
         function addToPreview(drugName, amount, frequency, relation, notes, button) {
-            const previewList = document.getElementById('previewList');
-            
-            // Check if drug is already in the preview list and remove it if so
-            const existingItem = Array.from(previewList.children).find(item => item.textContent.includes(drugName));
-            if (existingItem) {
-                previewList.removeChild(existingItem);
-            }
-            
-            // Create a new preview item
-            const previewItem = document.createElement('li');
-            previewItem.innerHTML = `<span class="bold-text">Drug:</span> <span class="normal-text">${drugName}</span>, 
-                                     <span class="bold-text">Amount:</span> <span class="normal-text">${amount || 'N/A'}</span>, 
-                                     <br><span class="bold-text">Frequency:</span> <span class="normal-text">${frequency || 'N/A'}</span>, 
-                                     <span class="bold-text">Relation to Food:</span> <span class="normal-text">${relation || 'N/A'}</span>, 
-                                     <br><span class="bold-text">Notes:</span> <span class="normal-text">${notes || 'N/A'}</span>`;
-            previewList.appendChild(previewItem);
-        }
+    const previewList = document.getElementById('previewList');
+
+    // Check if the drug is already in the preview list
+    const existingItem = Array.from(previewList.children).find(item =>
+        item.textContent.includes(drugName)
+    );
+    if (existingItem) {
+        previewList.removeChild(existingItem); // Remove the existing item to update it
+    }
+
+    // Create a new preview item
+    const previewItem = document.createElement('li');
+    previewItem.innerHTML = `<span class="bold-text">Drug:</span> <span class="normal-text">${drugName}</span>, 
+                             <span class="bold-text">Amount:</span> <span class="normal-text">${amount || 'N/A'}</span>, 
+                             <br><span class="bold-text">Frequency:</span> <span class="normal-text">${frequency || 'N/A'}</span>, 
+                             <span class="bold-text">Relation to Food:</span> <span class="normal-text">${relation || 'N/A'}</span>, 
+                             <br><span class="bold-text">Notes:</span> <span class="normal-text">${notes || 'N/A'}</span>`;
+
+    previewList.appendChild(previewItem);
+}
         function loadDrugs() {
     const selectedDrugs = JSON.parse(sessionStorage.getItem('selectedDrugs')) || [];
     const drugDetailsContainer = document.getElementById('drugDetailsContainer');
@@ -270,11 +273,26 @@
         notesInput.type = 'text';
         notesInput.placeholder = 'Add notes...';
 
+        // "Add to Preview" button
+        const addToPreviewButton = document.createElement('button');
+        addToPreviewButton.textContent = 'Add to Prescription';
+        addToPreviewButton.onclick = function () {
+            addToPreview(
+                drugNameSpan.textContent,
+                amountInput.value,
+                frequencySelect.value,
+                relationSelect.value,
+                notesInput.value,
+                addToPreviewButton
+            );
+        };
+
         drugDetails.appendChild(drugNameSpan);
         drugDetails.appendChild(amountInput);
         drugDetails.appendChild(frequencySelect);
         drugDetails.appendChild(relationSelect);
         drugDetails.appendChild(notesInput);
+        drugDetails.appendChild(addToPreviewButton);
 
         listItem.appendChild(drugDetails);
         drugDetailsContainer.appendChild(listItem);
