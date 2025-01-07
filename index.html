@@ -19,8 +19,7 @@
     <h2>Drug List</h2>
     <ul id="drugListContainer"></ul>
 
-    <!-- Button to navigate to the second page (Manage Drug Details) -->
-    <button onclick="window.location.href = 'mainpage.html';">Go to Manage Drug Details</button>
+    <button onclick="goToManageDetails()">Go to Main Page</button>
 
     <script>
         let db;
@@ -177,6 +176,20 @@
             listContainer.appendChild(listItem);
 
             document.getElementById('drugInput').value = '';
+        }
+        function goToManageDetails() {
+    const selectedDrugs = [];
+    const listItems = document.querySelectorAll('#drugListContainer li span');
+
+    listItems.forEach(item => {
+        selectedDrugs.push(item.textContent);
+    });
+
+    // Save the selected drugs to sessionStorage
+    sessionStorage.setItem('selectedDrugs', JSON.stringify(selectedDrugs));
+
+    // Navigate to the main page
+    window.location.href = 'mainpage.html';
         }
 
         function generatePDF() {
