@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drug Database</title>
+    <link rel="stylesheet" href="styles/styleindex.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <h1>Drug Database</h1>
+    
     <input type="text" id="drugInput" list="drugList" placeholder="Enter drug name">
     <datalist id="drugList"></datalist>
     <button onclick="addDrug()">Add Drug</button>
@@ -18,9 +20,9 @@
 
     <h2>Drug List</h2>
     <ul id="drugListContainer"></ul>
-
+    <hr>
     <button onclick="goToManageDetails()">Go to Main Page</button>
-
+   
     <script>
         let db;
         const request = indexedDB.open('DrugDatabase', 1);
@@ -40,7 +42,11 @@
         };
 
         function addDrug() {
-            const drugName = document.getElementById('drugInput').value;
+            const drugName = document.getElementById('drugInput').value.trim();
+            if (!drugName) {
+                alert('Please enter a drug name.');
+                return;
+            }
 
             const transaction = db.transaction(['drugs'], 'readwrite');
             const objectStore = transaction.objectStore('drugs');
@@ -65,8 +71,13 @@
         }
 
         function editDrug() {
-            const oldDrugName = document.getElementById('drugInput').value;
-            const newDrugName = prompt('Enter the new name for the drug:', oldDrugName);
+            const oldDrugName = document.getElementById('drugInput').value.trim();
+            if (!oldDrugName) {
+                alert('Please enter a drug name to edit.');
+                return;
+            }
+
+            const newDrugName = prompt('Enter the new name for the drug:', oldDrugName).trim();
 
             if (newDrugName && newDrugName !== oldDrugName) {
                 const transaction = db.transaction(['drugs'], 'readwrite');
@@ -82,7 +93,11 @@
         }
 
         function removeDrug() {
-            const drugName = document.getElementById('drugInput').value;
+            const drugName = document.getElementById('drugInput').value.trim();
+            if (!drugName) {
+                alert('Please enter a drug name to remove.');
+                return;
+            }
 
             const transaction = db.transaction(['drugs'], 'readwrite');
             const objectStore = transaction.objectStore('drugs');
@@ -112,8 +127,8 @@
         }
 
         function addToList() {
-            const drugName = document.getElementById('drugInput').value;
-            if (drugName.trim() === '') {
+            const drugName = document.getElementById('drugInput').value.trim();
+            if (!drugName) {
                 alert('Please enter a drug name.');
                 return;
             }
@@ -121,8 +136,15 @@
             const listContainer = document.getElementById('drugListContainer');
             const listItem = document.createElement('li');
 
+            // Create a container for the drug name and buttons
+            const drugContainer = document.createElement('div');
+            drugContainer.className = 'drug-item';
+
             const textSpan = document.createElement('span');
             textSpan.textContent = drugName;
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-group';
 
             const editButton = document.createElement('button');
             editButton.textContent = 'Edit';
@@ -148,48 +170,29 @@
                 const transaction = db.transaction(['drugs'], 'readwrite');
                 const objectStore = transaction.objectStore('drugs');
 
-                // Check if the new drug already exists
                 const checkRequest = objectStore.get(newDrugName);
                 checkRequest.onsuccess = function () {
                     if (checkRequest.result) {
-                        alert(`Drug "${newDrugName}" already exists in the database. Save aborted.`);
+                        alert(`Drug "${newDrugName}" already exists in the database.`);
                     } else {
-                        // Delete the original drug and add the new one
-                        objectStore.delete(originalDrugName).onsuccess = function () {
-                            objectStore.add({ name: newDrugName }).onsuccess = function () {
-                                alert(`Drug "${newDrugName}" saved to database.`);
-                                updateDatalist();
-                            };
+                        objectStore.add({ name: newDrugName }).onsuccess = function () {
+                            alert(`Drug "${newDrugName}" saved to database.`);
+                            updateDatalist();
                         };
                     }
                 };
-
-                checkRequest.onerror = function(event) {
-                    console.error('Error checking database:', event.target.errorCode);
-                };
             };
 
-            listItem.appendChild(textSpan);
-            listItem.appendChild(editButton);
-            listItem.appendChild(deleteButton);
-            listItem.appendChild(saveToDatabaseButton);
+            buttonContainer.appendChild(editButton);
+            buttonContainer.appendChild(deleteButton);
+            buttonContainer.appendChild(saveToDatabaseButton);
+
+            drugContainer.appendChild(textSpan);
+            drugContainer.appendChild(buttonContainer);
+            listItem.appendChild(drugContainer);
             listContainer.appendChild(listItem);
 
             document.getElementById('drugInput').value = '';
-        }
-        function goToManageDetails() {
-    const selectedDrugs = [];
-    const listItems = document.querySelectorAll('#drugListContainer li span');
-
-    listItems.forEach(item => {
-        selectedDrugs.push(item.textContent);
-    });
-
-    // Save the selected drugs to sessionStorage
-    sessionStorage.setItem('selectedDrugs', JSON.stringify(selectedDrugs));
-
-    // Navigate to the main page
-    window.location.href = 'mainpage.html';
         }
 
         function generatePDF() {
@@ -207,6 +210,18 @@
             });
 
             doc.save('drug_list.pdf');
+        }
+
+        function goToManageDetails() {
+            const selectedDrugs = [];
+            const listItems = document.querySelectorAll('#drugListContainer li .drug-item span');
+
+            listItems.forEach(item => {
+                selectedDrugs.push(item.textContent.trim());
+            });
+
+            sessionStorage.setItem('selectedDrugs', JSON.stringify(selectedDrugs));
+            window.location.href = 'mainpage.html';
         }
 
         window.onload = function() {
