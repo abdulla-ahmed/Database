@@ -122,7 +122,7 @@
         <ul id="previewList"></ul>
     </div>
     <button onclick="generatePDF()">Print Preview</button>
-    <button onclick="returnToHome()">Return to Home</button>
+    <button onclick="returnToIndex()">Return to Index</button>
     <script>
         let db;
         const request = indexedDB.open('DrugDatabase', 1);
@@ -226,21 +226,67 @@
                                      <br><span class="bold-text">Notes:</span> <span class="normal-text">${notes || 'N/A'}</span>`;
             previewList.appendChild(previewItem);
         }
-        function returnToHome() {
-    // Clear the drug details container and prescription preview
-    document.getElementById('drugDetailsContainer').innerHTML = '';
-    document.getElementById('previewList').innerHTML = '';
+        function loadDrugs() {
+    const selectedDrugs = JSON.parse(sessionStorage.getItem('selectedDrugs')) || [];
+    const drugDetailsContainer = document.getElementById('drugDetailsContainer');
+    drugDetailsContainer.innerHTML = '';
 
-    // Reset IndexedDB if needed (optional)
-    // Uncomment below lines if you want to clear data from IndexedDB
-    /*
-    const transaction = db.transaction(['drugs'], 'readwrite');
-    const objectStore = transaction.objectStore('drugs');
-    objectStore.clear();
-    */
+    selectedDrugs.forEach(drugName => {
+        const listItem = document.createElement('li');
+        listItem.className = 'drug-item';
 
-    // Redirect to index page
-    window.location.href = 'index.html'; // Change 'index.html' to the actual file name of your index page
+        // Drug details
+        const drugDetails = document.createElement('div');
+        drugDetails.className = 'drug-details';
+
+        const drugNameSpan = document.createElement('span');
+        drugNameSpan.className = 'drug-name';
+        drugNameSpan.textContent = drugName;
+
+        const amountInput = document.createElement('input');
+        amountInput.type = 'text';
+        amountInput.placeholder = 'Amount';
+        amountInput.className = 'amount-input';
+
+        const frequencySelect = document.createElement('select');
+        const frequencyOptions = ['1×1', '1×2', '1×3', '1×4', 'According to instructions'];
+        frequencyOptions.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.textContent = option;
+            frequencySelect.appendChild(opt);
+        });
+
+        const relationSelect = document.createElement('select');
+        const relationOptions = ['Before meals', 'After meals', 'With meals', 'According to instructions'];
+        relationOptions.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.textContent = option;
+            relationSelect.appendChild(opt);
+        });
+
+        const notesInput = document.createElement('input');
+        notesInput.type = 'text';
+        notesInput.placeholder = 'Add notes...';
+
+        drugDetails.appendChild(drugNameSpan);
+        drugDetails.appendChild(amountInput);
+        drugDetails.appendChild(frequencySelect);
+        drugDetails.appendChild(relationSelect);
+        drugDetails.appendChild(notesInput);
+
+        listItem.appendChild(drugDetails);
+        drugDetailsContainer.appendChild(listItem);
+    });
+}
+
+// Call loadDrugs when the page loads
+window.onload = loadDrugs;
+        function returnToIndex() {
+    // Clear sessionStorage to reset the temporary drug list
+    sessionStorage.removeItem('selectedDrugs');
+    window.location.href = 'index.html'; // Redirect to the index page
 }
 
         function generatePDF() {
