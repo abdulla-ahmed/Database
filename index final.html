@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drug Database</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <h1>Drug Database</h1>
+    <input type="text" id="drugInput" list="drugList" placeholder="Enter drug name">
+    <datalist id="drugList"></datalist>
+    <button onclick="addDrug()">Add Drug</button>
+    <button onclick="addToList()">Add to List</button>
+    <button onclick="generatePDF()">Generate PDF</button>
+    <button onclick="editDrug()">Edit Drug</button>
+    <button onclick="removeDrug()">Remove Drug</button>
+
+    <h2>Drug List</h2>
+    <ul id="drugListContainer"></ul>
+
+    <!-- Button to navigate to the second page (Manage Drug Details) -->
+    <button onclick="window.location.href = 'manage_drug_details.html';">Go to Manage Drug Details</button>
+
+    <script>
+        let db;
+        const request = indexedDB.open('DrugDatabase', 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            const objectStore = db.createObjectStore('drugs', { keyPath: 'name' });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            updateDatalist();
+        };
+
+        request.onerror = function(event) {
+            console.error('Database error:', event.target.errorCode);
+        };
+
+        function addDrug() {
+            const drugName = document.getElementById('drugInput').value;
+
+            const transaction = db.transaction(['drugs'], 'readwrite');
+            const objectStore = transaction.objectStore('drugs');
+
+            const request = objectStore.get(drugName);
+
+            request.onsuccess = function() {
+                if (!request.result) {
+                    const addRequest = objectStore.add({ name: drugName });
+                    addRequest.onsuccess = function() {
+                        alert('Drug added to database successfully!');
+                        updateDatalist();
+                    };
+                } else {
+                    alert('Drug already exists in the database.');
+                }
+            };
+
+            request.onerror = function(event) {
+                console.error('Error fetching drug:', event.target.errorCode);
+            };
+        }
+
+        function editDrug() {
+            const oldDrugName = document.getElementById('drugInput').value;
+            const newDrugName = prompt('Enter the new name for the drug:', oldDrugName);
+
+            if (newDrugName && newDrugName !== oldDrugName) {
+                const transaction = db.transaction(['drugs'], 'readwrite');
+                const objectStore = transaction.objectStore('drugs');
+
+                objectStore.delete(oldDrugName).onsuccess = function() {
+                    objectStore.add({ name: newDrugName }).onsuccess = function() {
+                        alert('Drug updated successfully!');
+                        updateDatalist();
+                    };
+                };
+            }
+        }
+
+        function removeDrug() {
+            const drugName = document.getElementById('drugInput').value;
+
+            const transaction = db.transaction(['drugs'], 'readwrite');
+            const objectStore = transaction.objectStore('drugs');
+
+            objectStore.delete(drugName).onsuccess = function() {
+                alert('Drug removed from database successfully!');
+                updateDatalist();
+            };
+        }
+
+        function updateDatalist() {
+            const datalist = document.getElementById('drugList');
+            datalist.innerHTML = '';
+
+            const transaction = db.transaction(['drugs'], 'readonly');
+            const objectStore = transaction.objectStore('drugs');
+
+            objectStore.openCursor().onsuccess = function(event) {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const option = document.createElement('option');
+                    option.value = cursor.value.name;
+                    datalist.appendChild(option);
+                    cursor.continue();
+                }
+            };
+        }
+
+        function addToList() {
+            const drugName = document.getElementById('drugInput').value;
+            if (drugName.trim() === '') {
+                alert('Please enter a drug name.');
+                return;
+            }
+
+            const listContainer = document.getElementById('drugListContainer');
+            const listItem = document.createElement('li');
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = drugName;
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.onclick = function () {
+                const newDrugName = prompt('Edit drug name:', textSpan.textContent);
+                if (newDrugName && newDrugName.trim() !== '') {
+                    textSpan.textContent = newDrugName.trim();
+                }
+            };
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function () {
+                listContainer.removeChild(listItem);
+            };
+
+            const saveToDatabaseButton = document.createElement('button');
+            saveToDatabaseButton.textContent = 'Save to Database';
+            saveToDatabaseButton.onclick = function () {
+                const newDrugName = textSpan.textContent;
+                const originalDrugName = drugName;
+
+                const transaction = db.transaction(['drugs'], 'readwrite');
+                const objectStore = transaction.objectStore('drugs');
+
+                // Check if the new drug already exists
+                const checkRequest = objectStore.get(newDrugName);
+                checkRequest.onsuccess = function () {
+                    if (checkRequest.result) {
+                        alert(`Drug "${newDrugName}" already exists in the database. Save aborted.`);
+                    } else {
+                        // Delete the original drug and add the new one
+                        objectStore.delete(originalDrugName).onsuccess = function () {
+                            objectStore.add({ name: newDrugName }).onsuccess = function () {
+                                alert(`Drug "${newDrugName}" saved to database.`);
+                                updateDatalist();
+                            };
+                        };
+                    }
+                };
+
+                checkRequest.onerror = function(event) {
+                    console.error('Error checking database:', event.target.errorCode);
+                };
+            };
+
+            listItem.appendChild(textSpan);
+            listItem.appendChild(editButton);
+            listItem.appendChild(deleteButton);
+            listItem.appendChild(saveToDatabaseButton);
+            listContainer.appendChild(listItem);
+
+            document.getElementById('drugInput').value = '';
+        }
+
+        function generatePDF() {
+            const listItems = document.querySelectorAll('#drugListContainer li span');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let yOffset = 10;
+
+            doc.text('Drug List:', 10, yOffset);
+            yOffset += 10;
+
+            listItems.forEach(item => {
+                doc.text(`- ${item.textContent}`, 10, yOffset);
+                yOffset += 10;
+            });
+
+            doc.save('drug_list.pdf');
+        }
+
+        window.onload = function() {
+            if (db) {
+                updateDatalist();
+            }
+        };
+    </script>
+</body>
+</html>

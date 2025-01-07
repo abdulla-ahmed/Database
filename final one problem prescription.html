@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Drug Details</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+    <style>
+        body {
+            margin: 0; /* Remove default margin for the body */
+            padding: 20px; /* Add padding around the content */
+        }
+
+        .drug-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .drug-info {
+            margin-top: 5px;
+        }
+
+        select, input[type="text"] {
+            margin: 5px;
+            width: 200px; /* Reduced width of the dropdown and input boxes */
+            font-weight: normal; /* Input fields are not bold */
+        }
+
+        .drug-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .drug-name {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .drug-actions {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .action-button {
+            margin-bottom: 5px;
+        }
+
+        #drugDetailsContainer {
+            width: 100%;
+        }
+
+        #prescription {
+            margin-top: 30px;
+            font-weight: bold;
+            margin-left: 20mm; /* Margin for left side of the page */
+            margin-right: 20mm; /* Margin for right side of the page */
+            margin-top: 20mm; /* Margin for the top of the page */
+            margin-bottom: 20mm; /* Margin for bottom of the page */
+        }
+
+        /* A4 Page Formatting for HTML output */
+        #prescription ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        #prescription li {
+            margin-bottom: 15px; /* Decreased margin between drugs */
+        }
+
+        /* Add space between drugs and their details */
+        #prescription li + li {
+            margin-top: 15px;
+        }
+
+        /* Styling for bold text labels and normal text for values */
+        .bold-text {
+            font-weight: bold;
+        }
+
+        .normal-text {
+            font-weight: normal;
+        }
+
+        /* Flex styling to display drug and amount on the same line */
+        .drug-amount-line {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Styling for Frequency and Relation to Food to be on same line */
+        .frequency-meal-line {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Preview font size styling */
+        #previewList {
+            font-size: 12px; /* Smaller font size for preview only */
+        }
+
+        /* Ensuring font size stays the same for PDF generation */
+        #prescription {
+            font-size: 14px; /* Normal font size for PDF */
+        }
+
+        /* CSS rule to prevent preview styles from affecting the PDF */
+        #prescription * {
+            font-size: 14px !important; /* Ensure the PDF uses this size */
+        }
+    </style>
+</head>
+<body>
+    <h1>Manage Drug Details</h1>
+    <ul id="drugDetailsContainer"></ul>
+    <div id="prescription">
+        <h2>Prescription</h2>
+        <ul id="previewList"></ul>
+    </div>
+    <button onclick="generatePDF()">Print Preview</button>
+
+    <script>
+        let db;
+        const request = indexedDB.open('DrugDatabase', 1);
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            loadDrugs();
+        };
+
+        request.onerror = function(event) {
+            console.error('Database error:', event.target.errorCode);
+        };
+
+        function loadDrugs() {
+            const transaction = db.transaction(['drugs'], 'readonly');
+            const objectStore = transaction.objectStore('drugs');
+
+            const drugDetailsContainer = document.getElementById('drugDetailsContainer');
+            drugDetailsContainer.innerHTML = '';
+
+            objectStore.openCursor().onsuccess = function(event) {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const drug = cursor.value;
+                    const listItem = document.createElement('li');
+                    listItem.className = 'drug-item';
+
+                    // Drug details
+                    const drugDetails = document.createElement('div');
+                    drugDetails.className = 'drug-details';
+
+                    const drugName = document.createElement('span');
+                    drugName.className = 'drug-name';
+                    drugName.textContent = cursor.key;
+
+                    const amountInput = document.createElement('input');
+                    amountInput.type = 'text';
+                    amountInput.placeholder = 'Amount';
+                    amountInput.className = 'amount-input';
+
+                    const frequencySelect = document.createElement('select');
+                    const frequencyOptions = ['1×1', '1×2', '1×3', '1×4', 'According to instructions'];
+                    frequencyOptions.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option;
+                        opt.textContent = option;
+                        frequencySelect.appendChild(opt);
+                    });
+
+                    const relationSelect = document.createElement('select');
+                    const relationOptions = ['Before meals', 'After meals', 'With meals', 'According to instructions'];
+                    relationOptions.forEach(option => {
+                        const opt = document.createElement('option');
+                        opt.value = option;
+                        opt.textContent = option;
+                        relationSelect.appendChild(opt);
+                    });
+
+                    const notesInput = document.createElement('input');
+                    notesInput.type = 'text';
+                    notesInput.placeholder = 'Add notes...';
+
+                    // Create the "Add to Preview" button
+                    const addToPreviewButton = document.createElement('button');
+                    addToPreviewButton.textContent = 'Add to Prescription';
+                    addToPreviewButton.onclick = function () {
+                        addToPreview(drugName.textContent, amountInput.value, frequencySelect.value, relationSelect.value, notesInput.value, addToPreviewButton);
+                    };
+
+                    drugDetails.appendChild(drugName);
+                    drugDetails.appendChild(amountInput);
+                    drugDetails.appendChild(frequencySelect);
+                    drugDetails.appendChild(relationSelect);
+                    drugDetails.appendChild(notesInput);
+                    drugDetails.appendChild(addToPreviewButton);
+
+                    listItem.appendChild(drugDetails);
+
+                    drugDetailsContainer.appendChild(listItem);
+                    cursor.continue();
+                }
+            };
+        }
+
+        // Function to add details to prescription preview
+        function addToPreview(drugName, amount, frequency, relation, notes, button) {
+            const previewList = document.getElementById('previewList');
+            
+            // Check if drug is already in the preview list and remove it if so
+            const existingItem = Array.from(previewList.children).find(item => item.textContent.includes(drugName));
+            if (existingItem) {
+                previewList.removeChild(existingItem);
+            }
+            
+            // Create a new preview item
+            const previewItem = document.createElement('li');
+            previewItem.innerHTML = `<span class="bold-text">Drug:</span> <span class="normal-text">${drugName}</span>, 
+                                     <span class="bold-text">Amount:</span> <span class="normal-text">${amount || 'N/A'}</span>, 
+                                     <br><span class="bold-text">Frequency:</span> <span class="normal-text">${frequency || 'N/A'}</span>, 
+                                     <span class="bold-text">Relation to Food:</span> <span class="normal-text">${relation || 'N/A'}</span>, 
+                                     <br><span class="bold-text">Notes:</span> <span class="normal-text">${notes || 'N/A'}</span>`;
+            previewList.appendChild(previewItem);
+        }
+
+        function generatePDF() {
+            const previewItems = document.querySelectorAll('#previewList li');
+            
+            const element = document.getElementById('prescription');
+            const opt = {
+                margin:       10, /* Adjust the margin to ensure content starts away from page edges */
+                filename:     'prescription.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().from(element).set(opt).save();
+        }
+    </script>
+</body>
+</html>
