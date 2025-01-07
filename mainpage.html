@@ -308,19 +308,34 @@ window.onload = loadDrugs;
 }
 
         function generatePDF() {
-            const previewItems = document.querySelectorAll('#previewList li');
-            
-            const element = document.getElementById('prescription');
-            const opt = {
-                margin:       10, /* Adjust the margin to ensure content starts away from page edges */
-                filename:     'prescription.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            
-            html2pdf().from(element).set(opt).save();
-        }
+    const previewItems = document.querySelectorAll('#previewList li');
+
+    // Create a new div to contain the content with bullet points
+    const previewListContainer = document.createElement('div');
+    
+    // Add each list item to the new div
+    previewItems.forEach(item => {
+        const listItem = document.createElement('div');
+        listItem.innerHTML = `<ul style="list-style-type: disc; padding-left: 20px;">${item.innerHTML}</ul>`;
+        previewListContainer.appendChild(listItem);
+    });
+
+    // Set the options for the PDF generation
+    const opt = {
+        margin: 10, // Adjusts the margin to ensure content starts away from page edges
+        filename: 'prescription.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Create a temporary container to hold the content and pass it to html2pdf
+    const tempElement = document.createElement('div');
+    tempElement.appendChild(previewListContainer);
+
+    // Generate the PDF
+    html2pdf().from(tempElement).set(opt).save();
+}
     </script>
 </body>
 </html>
