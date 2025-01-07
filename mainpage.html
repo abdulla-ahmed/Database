@@ -309,28 +309,37 @@ window.onload = loadDrugs;
 
         function generatePDF() {
     const previewItems = document.querySelectorAll('#previewList li');
-
-    // Add numbering to each item before PDF generation
-    previewItems.forEach((item, index) => {
-        item.textContent = `${index + 1}. ${item.textContent}`;
-    });
-
+    
     const element = document.getElementById('prescription');
     const opt = {
-        margin: 10,
+        margin: 10, // Adjusts the margin to ensure content starts away from page edges
         filename: 'prescription.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // Generate the PDF
-    html2pdf().from(element).set(opt).save();
+    // Create the PDF using html2pdf
+    html2pdf().from(element).set(opt).toPdf().get('pdf').then(function (pdf) {
+        const yOffset = 10;
+        let currentY = yOffset;
 
-    // Remove numbering after PDF generation to avoid modifying the original content
-    previewItems.forEach(item => {
-        item.textContent = item.textContent.replace(/^\d+\.\s/, '');
+        // Loop through each preview item and add numbered items
+        previewItems.forEach((item, index) => {
+            const drugName = item.querySelector('.normal-text').textContent;
+            const amount = item.querySelector('.amount-text') ? item.querySelector('.amount-text').textContent : 'N/A';
+            const frequency = item.querySelector('.frequency-text') ? item.querySelector('.frequency-text').textContent : 'N/A';
+            const relation = item.querySelector('.relation-text') ? item.querySelector('.relation-text').textContent : 'N/A';
+            const notes = item.querySelector('.notes-text') ? item.querySelector('.notes-text').textContent : 'N/A';
+
+            pdf.text(`${index + 1}. ${drugName} - Amount: ${amount}, Frequency: ${frequency}, Relation to Food: ${relation}, Notes: ${notes}`, 10, currentY);
+            currentY += 10; // Increase y position for the next item
+        });
+
+        // Save the PDF
+        pdf.save('prescription.pdf');
     });
+}
 }
     </script>
 </body>
