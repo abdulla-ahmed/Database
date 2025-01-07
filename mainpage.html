@@ -122,7 +122,7 @@
         <ul id="previewList"></ul>
     </div>
     <button onclick="generatePDF()">Print Preview</button>
-
+    <button onclick="returnToHome()">Return to Home</button>
     <script>
         let db;
         const request = indexedDB.open('DrugDatabase', 1);
@@ -226,6 +226,22 @@
                                      <br><span class="bold-text">Notes:</span> <span class="normal-text">${notes || 'N/A'}</span>`;
             previewList.appendChild(previewItem);
         }
+        function returnToHome() {
+    // Clear the drug details container and prescription preview
+    document.getElementById('drugDetailsContainer').innerHTML = '';
+    document.getElementById('previewList').innerHTML = '';
+
+    // Reset IndexedDB if needed (optional)
+    // Uncomment below lines if you want to clear data from IndexedDB
+    /*
+    const transaction = db.transaction(['drugs'], 'readwrite');
+    const objectStore = transaction.objectStore('drugs');
+    objectStore.clear();
+    */
+
+    // Redirect to index page
+    window.location.href = 'index.html'; // Change 'index.html' to the actual file name of your index page
+}
 
         function generatePDF() {
             const previewItems = document.querySelectorAll('#previewList li');
