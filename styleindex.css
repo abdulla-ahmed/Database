@@ -1,0 +1,100 @@
+
+    body {
+      font-family: 'arial', Times, serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+    }
+     input[type="text"] {
+        width: 93%; /* Makes it responsive */
+}
+#drugListContainer {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0;
+    margin: 0;
+}
+
+.drug-item {
+    margin-bottom: 15px; /* Space between drugs */
+}
+
+.drug-item span {
+    display: block; /* Drug name appears above buttons */
+    font-weight: bold;
+    margin-bottom: 5px; /* Add space below the drug name */
+}
+
+.button-group {
+    display: flex; /* Arrange buttons horizontally */
+    gap: 10px; /* Space between buttons */
+}
+
+.button-group button {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    padding: 5px 10px; /* Add padding */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.button-group button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      border: 1px solid black;
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    h1{
+      color: black;
+      text-align: center;
+      font-weight: bold;
+      font-family: 'times new roman',Times,serif;
+    }
+    h2 {
+      text-align: center;
+      color: black;
+      
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 10px 0 5px;
+      
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: -10px;
+    }
+    .link {
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+    }
+
