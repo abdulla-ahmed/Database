@@ -308,19 +308,30 @@ window.onload = loadDrugs;
 }
 
         function generatePDF() {
-            const previewItems = document.querySelectorAll('#previewList li');
-            
-            const element = document.getElementById('prescription');
-            const opt = {
-                margin:       10, /* Adjust the margin to ensure content starts away from page edges */
-                filename:     'prescription.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            
-            html2pdf().from(element).set(opt).save();
-        }
+    const previewItems = document.querySelectorAll('#previewList li');
+
+    // Add numbering to each item before PDF generation
+    previewItems.forEach((item, index) => {
+        item.textContent = `${index + 1}. ${item.textContent}`;
+    });
+
+    const element = document.getElementById('prescription');
+    const opt = {
+        margin: 10,
+        filename: 'prescription.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    };
+
+    // Generate the PDF
+    html2pdf().from(element).set(opt).save();
+
+    // Remove numbering after PDF generation to avoid modifying the original content
+    previewItems.forEach(item => {
+        item.textContent = item.textContent.replace(/^\d+\.\s/, '');
+    });
+}
     </script>
 </body>
 </html>
