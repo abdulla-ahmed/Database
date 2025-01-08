@@ -2,3 +2,26 @@ body {
       font-family: 'arial', Times, serif;
       margin: 20px;
       background-color: #f9f9f9;
+
+      h1{
+            color: black;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+      }
+      h2{
+            color: black;
+            font-weight: bold;
+      }
+      button{
+            color: white;
+            background-color: green;
+            border: 5px;
+            cursor: pointer;
+      }
+      button:hover{
+            background-color: #218838;
+      }
+      
+            
+            
