@@ -8,10 +8,12 @@ body {
             text-align: center;
             font-size: 32px;
             font-weight: bold;
+            font-family: 'times new roman' , Times, serif;
       }
       h2{
             color: black;
             font-weight: bold;
+            
       }
       button{
             color: white;
@@ -25,6 +27,7 @@ body {
       input,button{
             width: 50%;
             padding: 10px;
+            border-radius: 4px;
             
       
             
