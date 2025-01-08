@@ -22,6 +22,10 @@ body {
       button:hover{
             background-color: #218838;
       }
+      input,button{
+            width: 50%;
+            padding: 10px;
+            
       
             
             
